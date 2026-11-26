@@ -1,5 +1,12 @@
 import { useRef } from "react";
-import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
 import { Sun, Wind, Drop, Leaf, Pulse, ShieldCheck } from "@phosphor-icons/react";
 import { Spotlight } from "@/components/ui/spotlight";
 import { cn } from "@/lib/utils";
@@ -72,32 +79,107 @@ const ALGAE_PILLARS = [
   },
 ];
 
+function StackingPillarCard({
+  item,
+  index,
+  total,
+  progress,
+}: {
+  item: (typeof ALGAE_PILLARS)[number];
+  index: number;
+  total: number;
+  progress: MotionValue<number>;
+}) {
+  const Icon = item.icon;
+  const step = 1 / Math.max(1, total - 1);
+  const center = index * step;
+
+  const y = useTransform(
+    progress,
+    [center - step, center, center + step],
+    [240, 0, -28 - index * 4]
+  );
+  const scale = useTransform(
+    progress,
+    [center - step, center, center + step],
+    [0.92, 1, 0.9]
+  );
+  const rotateX = useTransform(
+    progress,
+    [center - step, center, center + step],
+    [16, 0, -6]
+  );
+  const opacity = useTransform(
+    progress,
+    [center - step * 1.05, center - step * 0.25, center, center + step],
+    [0, 1, 1, 0.35]
+  );
+
+  return (
+    <motion.article
+      style={{
+        y,
+        scale,
+        rotateX,
+        opacity,
+        zIndex: index + 1,
+        transformPerspective: 1200,
+      }}
+      className="absolute inset-0 flex items-center justify-center"
+    >
+      <div className="group relative w-full max-w-2xl overflow-hidden rounded-3xl border border-[#D1FAE5] bg-white p-8 shadow-[0_24px_64px_rgba(6,35,23,0.1)] sm:p-10">
+        <Spotlight size={260} />
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#A7F3D0] bg-[#ECFDF5] text-[#059669]">
+            <Icon size={24} weight="duotone" aria-hidden="true" />
+          </div>
+          <span className="font-mono title-3 text-[#059669]">
+            {item.index}
+          </span>
+        </div>
+
+        <h3 className="heading-4 relative z-10 mt-8 text-[#0F1F17]">
+          {item.label}
+        </h3>
+        <p className="body-3 relative z-10 mt-3 max-w-lg text-[#3B5246]">
+          {item.detail}
+        </p>
+      </div>
+    </motion.article>
+  );
+}
+
 export function AlgaeTextScrollSection() {
   const targetRef = useRef<HTMLDivElement | null>(null);
-  const targetRef2 = useRef<HTMLDivElement | null>(null);
+  const deckRef = useRef<HTMLDivElement | null>(null);
+  const reduced = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
     target: targetRef,
     offset: ["start end", "end start"],
   });
-  const { scrollYProgress: scrollYProgress2 } = useScroll({
-    target: targetRef2,
-    offset: ["start end", "center center"],
+
+  const { scrollYProgress: deckScrollProgress } = useScroll({
+    target: deckRef,
+    offset: ["start start", "end end"],
+  });
+
+  const smoothDeckProgress = useSpring(deckScrollProgress, {
+    stiffness: 90,
+    damping: 26,
+    mass: 0.5,
   });
 
   const text = "BREATHE NATURE INDOORS";
   const characters = text.split("");
   const centerIndex = Math.floor(characters.length / 2);
 
-  const gridOpacity = useTransform(scrollYProgress2, [0, 0.45], [0.35, 1]);
-  const gridY = useTransform(scrollYProgress2, [0, 0.55], [40, 0]);
-
   return (
-    <section className="w-full overflow-hidden border-y border-[#D1FAE5] bg-[#F8FAF7]">
+    <section className="w-full border-y border-[#D1FAE5] bg-[#F8FAF7]">
       {/* Block 1: 3D Character Scroll Assembly */}
       <div
         ref={targetRef}
-        className="relative flex h-[56vh] items-center justify-center px-6 md:h-[68vh]"
+        className="relative flex h-[56vh] items-center justify-center overflow-hidden px-6 md:h-[68vh]"
       >
         <div
           className="w-full max-w-5xl text-center text-3xl font-semibold uppercase tracking-tight sm:text-5xl md:text-6xl"
@@ -115,39 +197,49 @@ export function AlgaeTextScrollSection() {
         </div>
       </div>
 
-      {/* Block 2: Clean Architectural 3x2 System Bento Grid */}
-      <div ref={targetRef2} className="mx-auto max-w-7xl px-6 pb-24 sm:px-10">
-        <motion.div
-          style={{ opacity: gridOpacity, y: gridY }}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-        >
+      {/* Block 2: 3D Scroll-Stacking Cards for the 6 Algae Pillars */}
+      {reduced ? (
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-6 pb-24 sm:grid-cols-2 sm:px-10 lg:grid-cols-3">
           {ALGAE_PILLARS.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.label}
-                className="group relative overflow-hidden rounded-2xl border border-[#D1FAE5] bg-white p-6 transition-all duration-300 ease-algora hover:border-[#10B981] hover:shadow-[0_14px_36px_rgba(5,150,105,0.08)]"
+                className="rounded-2xl border border-[#D1FAE5] bg-white p-6"
               >
-                <Spotlight size={220} />
-                <div className="relative z-10 flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] text-[#059669]">
-                    <Icon size={20} weight="duotone" aria-hidden="true" />
-                  </div>
+                <div className="flex items-center justify-between">
+                  <Icon size={20} weight="duotone" className="text-[#059669]" />
                   <span className="font-mono caption-4 text-[#059669]">
                     {item.index}
                   </span>
                 </div>
-                <h3 className="title-3 relative z-10 mt-5 text-[#0F1F17]">
-                  {item.label}
-                </h3>
-                <p className="body-6 relative z-10 mt-2 text-[#3B5246]">
-                  {item.detail}
-                </p>
+                <h3 className="title-3 mt-4 text-[#0F1F17]">{item.label}</h3>
+                <p className="body-6 mt-2 text-[#3B5246]">{item.detail}</p>
               </div>
             );
           })}
-        </motion.div>
-      </div>
+        </div>
+      ) : (
+        <div
+          ref={deckRef}
+          className="relative px-6 sm:px-10"
+          style={{ height: `${ALGAE_PILLARS.length * 60}vh` }}
+        >
+          <div className="sticky top-0 flex h-screen flex-col items-center justify-center overflow-hidden">
+            <div className="relative h-[300px] w-full max-w-2xl sm:h-[320px]">
+              {ALGAE_PILLARS.map((item, idx) => (
+                <StackingPillarCard
+                  key={item.label}
+                  item={item}
+                  index={idx}
+                  total={ALGAE_PILLARS.length}
+                  progress={smoothDeckProgress}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
