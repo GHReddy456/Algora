@@ -153,8 +153,8 @@ export default function GlyphPortal({
       active = true,
       ready = false;
     const mountedAt = performance.now();
-    let browserFrameSeen = false,
-      stalled = false;
+    let browserFrameSeen = false;
+    const stalled = false;
     let W = 1,
       H = 1,
       travel = 1,
@@ -180,7 +180,15 @@ export default function GlyphPortal({
       }
     });
     glyph.style.fontFamily = [...available, DEFAULT_FONT].join(",");
-    stalled = available.length < families.length;
+
+    // Re-measure once web fonts finish loading on cold Vercel loads
+    document.fonts?.ready.then(() => {
+      if (disposed) return;
+      glyph.style.fontFamily = fontFamily;
+      fontDirty = true;
+      dirty = true;
+      schedule();
+    });
 
     const readInk = () => {
       if (!context) return false;
@@ -385,7 +393,6 @@ export default function GlyphPortal({
       if (disposed) return;
       if (time !== undefined && !browserFrameSeen) {
         browserFrameSeen = true;
-        stalled ||= performance.now() - mountedAt > 2500;
         dirty = true;
       }
       if (dirty) {
