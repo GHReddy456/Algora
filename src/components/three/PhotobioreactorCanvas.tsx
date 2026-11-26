@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Environment, Lightformer, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
@@ -97,7 +97,8 @@ function ReactorAssembly({
   exploded = false,
   selectedId = null,
   onSelectComponent,
-}: PhotobioreactorProps) {
+  isVisible = false,
+}: PhotobioreactorProps & { isVisible?: boolean }) {
   const rootRef = useRef<THREE.Group>(null);
   const crownRef = useRef<THREE.Group>(null);
   const chamberRef = useRef<THREE.Group>(null);
@@ -125,7 +126,9 @@ function ReactorAssembly({
 
   useFrame(({ clock }, delta) => {
     if (rootRef.current) {
-      rootRef.current.rotation.y += delta * 0.12;
+      if (isVisible) {
+        rootRef.current.rotation.y += delta * 0.12;
+      }
       const targetScale = exploded ? 0.82 : 0.96;
       rootRef.current.scale.setScalar(
         THREE.MathUtils.lerp(rootRef.current.scale.x, targetScale, 0.08)
@@ -412,65 +415,86 @@ export function PhotobioreactorCanvas({
   selectedId = null,
   onSelectComponent,
 }: PhotobioreactorProps) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.25 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex h-full w-full items-center justify-center">
-          <div className="h-72 w-40 animate-pulse rounded-3xl bg-neutral-200" />
-        </div>
-      }
-    >
-      <Canvas
-        dpr={[1, 2]}
-        camera={{ position: [0, 0.05, 5.8], fov: 35 }}
-        gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping }}
+    <div ref={hostRef} className="h-full w-full">
+      <Suspense
+        fallback={
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="h-72 w-40 animate-pulse rounded-3xl bg-neutral-200" />
+          </div>
+        }
       >
-        <ambientLight intensity={0.95} />
-        <directionalLight position={[5, 7, 5]} intensity={2.2} color="#FFFFFF" />
-        <directionalLight position={[-5, 3, 4]} intensity={1.1} color="#E2E8F0" />
-        <pointLight position={[0, 1.1, 0.5]} intensity={2.2} color="#D946EF" />
-        <pointLight position={[0, 0.45, 0.6]} intensity={1.8} color="#22C55E" />
+        <Canvas
+          dpr={[1, 2]}
+          camera={{ position: [0, 0.05, 5.8], fov: 35 }}
+          gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping }}
+        >
+          <ambientLight intensity={0.95} />
+          <directionalLight position={[5, 7, 5]} intensity={2.2} color="#FFFFFF" />
+          <directionalLight position={[-5, 3, 4]} intensity={1.1} color="#E2E8F0" />
+          <pointLight position={[0, 1.1, 0.5]} intensity={2.2} color="#D946EF" />
+          <pointLight position={[0, 0.45, 0.6]} intensity={1.8} color="#22C55E" />
 
-        <Environment resolution={256}>
-          <Lightformer
-            form="rect"
-            intensity={3.5}
-            position={[4, 4, 4]}
-            scale={[3, 8, 1]}
-            color="#FFFFFF"
+          <Environment resolution={256}>
+            <Lightformer
+              form="rect"
+              intensity={3.5}
+              position={[4, 4, 4]}
+              scale={[3, 8, 1]}
+              color="#FFFFFF"
+            />
+            <Lightformer
+              form="rect"
+              intensity={2.4}
+              position={[-4, 2, 3]}
+              scale={[2, 7, 1]}
+              color="#F8FAFC"
+            />
+          </Environment>
+
+          <ReactorAssembly
+            exploded={exploded}
+            selectedId={selectedId}
+            onSelectComponent={onSelectComponent}
+            isVisible={isVisible}
           />
-          <Lightformer
-            form="rect"
-            intensity={2.4}
-            position={[-4, 2, 3]}
-            scale={[2, 7, 1]}
-            color="#F8FAFC"
+
+          <ContactShadows
+            position={[0, -1.65, 0]}
+            opacity={0.32}
+            scale={5}
+            blur={2.2}
+            far={2.6}
+            color="#111827"
           />
-        </Environment>
 
-        <ReactorAssembly
-          exploded={exploded}
-          selectedId={selectedId}
-          onSelectComponent={onSelectComponent}
-        />
-
-        <ContactShadows
-          position={[0, -1.65, 0]}
-          opacity={0.32}
-          scale={5}
-          blur={2.2}
-          far={2.6}
-          color="#111827"
-        />
-
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          rotateSpeed={0.7}
-          dampingFactor={0.07}
-          enableDamping
-        />
-      </Canvas>
-    </Suspense>
+          <OrbitControls
+            enableZoom={false}
+            enablePan={false}
+            rotateSpeed={0.7}
+            dampingFactor={0.07}
+            enableDamping
+          />
+        </Canvas>
+      </Suspense>
+    </div>
   );
 }
