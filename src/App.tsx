@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { MotionConfig } from "motion/react";
 import ReactLenis from "lenis/react";
 import { Navbar } from "@/components/Navbar";
+import { AlgoraPreloader } from "@/components/ui/AlgoraPreloader";
 import { CursorAlgaeJet } from "@/components/ui/CursorAlgaeJet";
 import { HeroSection } from "@/components/HeroSection";
 import { ParallaxComponent } from "@/components/ui/parallax-scrolling";
@@ -147,6 +148,7 @@ export function App() {
     <MotionConfig reducedMotion="user">
       <ReactLenis root options={{ lerp: 0.08, smoothWheel: true }}>
         <div className="min-h-screen bg-white text-[#0F1F17]">
+          <AlgoraPreloader />
           <CursorAlgaeJet />
           <Navbar onConnectClick={() => setConnectOpen(true)} />
 

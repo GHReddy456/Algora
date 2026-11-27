@@ -232,4 +232,34 @@ export const FAQ_ITEMS: FaqItem[] = [
     answer:
       "Yes. Our research roadmap extends from compact desktop photobioreactors to modular architectural panels and larger urban environmental installations.",
   },
+  {
+    question: "Why choose Chlorella vulgaris over terrestrial houseplants?",
+    answer:
+      "Microalgae grow suspended in illuminated liquid medium where every cell performs photosynthesis across its entire surface, enabling compact photobioreactor geometries.",
+  },
+  {
+    question: "How does the integrated optical crown support the culture?",
+    answer:
+      "Precision tuned LED illumination delivers consistent photosynthetically active wavelengths even in shaded rooms with limited natural daylight.",
+  },
+  {
+    question: "What does the lower intake plenum capture?",
+    answer:
+      "The replaceable particulate and activated carbon assembly traps airborne dust, fine particles, and volatile organic compounds before air circulates back into the room.",
+  },
+  {
+    question: "How quiet is the liquid circulation system?",
+    answer:
+      "Concealed low vibration fluidics and acoustic perimeter louvers keep aeration gentle enough for quiet studios, bedrooms, and workspaces.",
+  },
+  {
+    question: "What environmental sensors are built into the unit?",
+    answer:
+      "Onboard probes track culture temperature, ambient air temperature, and relative humidity, feeding real time status to the front OLED display and connected interface.",
+  },
+  {
+    question: "How can research partners collaborate with Algora?",
+    answer:
+      "Architects, laboratories, and workplace sustainability teams can connect directly through our inquiry form to explore early prototypes and pilot deployments.",
+  },
 ];
